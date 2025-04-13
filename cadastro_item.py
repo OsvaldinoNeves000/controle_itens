@@ -35,7 +35,7 @@ class CadastroItemDialog(QDialog):
 
         self.valor_unitario_input = QLineEdit()
         self.valor_unitario_input.setValidator(QRegularExpressionValidator(r"^\d{1,3}(\.\d{3})*(,\d{2})?$"))
-            self.valor_unitario_input.setText(locale.currency(dados['valor_unitario'], grouping=True))
+        if editar and dados:    self.valor_unitario_input.setText(locale.currency(dados['valor_unitario'], grouping=True))
 
         self.valor_unitario_input.textChanged.connect(self.atualizar_valor_total)
 
@@ -78,11 +78,10 @@ class CadastroItemDialog(QDialog):
             self.valor_total_input.setText(locale.currency(valor_total, grouping=True))
         except ValueError:
             self.valor_total_input.clear()
+
     def salvar(self) -> None:
         try:
-            editar = self.editar
-            quantidade: int = int(self.quantidade_input.text())
-                        descricao: str = self.descricao_input.text().strip()
+            quantidade: int = int(self.quantidade_input.text())            descricao: str = self.descricao_input.text().strip()
             destino: str = self.destino_input.text().strip()            
             valor_texto: str = self.valor_unitario_input.text().replace('.', '').replace(',', '.').strip()
             valor_unitario: float = float(valor_texto)
