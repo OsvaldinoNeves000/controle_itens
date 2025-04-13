@@ -1,6 +1,7 @@
 import os
 import sys
 import sqlite3
+import locale
 import sqlite3
 from datetime import datetime
 
@@ -13,6 +14,9 @@ from PySide6.QtWidgets import (
 
 from database import init_db, get_company_config, get_items
 from models import Company, Item
+
+# Set the locale for number formatting
+locale.setlocale(locale.LC_ALL, 'pt_BR')
 
 DB_FILE = "items.db"
 
@@ -178,8 +182,8 @@ class MainWindow(QMainWindow):
             self.tabela.setItem(row, 2, QTableWidgetItem(item.destino))
 
             # Format numeric values with currency and decimal separators
-            valor_unitario_formatted = f"R$ {item.valor_unitario:,.2f}".replace('.', 'X').replace(',', '.').replace('X', ',')
-            valor_total_formatted = f"R$ {item.valor_total:,.2f}".replace('.', 'X').replace(',', '.').replace('X', ',')
+            valor_unitario_formatted = locale.currency(item.valor_unitario, grouping=True)
+            valor_total_formatted = locale.currency(item.valor_total, grouping=True)
 
             self.tabela.setItem(row, 3, QTableWidgetItem(valor_unitario_formatted))
             self.tabela.setItem(row, 4, QTableWidgetItem(valor_total_formatted))
@@ -218,7 +222,7 @@ class MainWindow(QMainWindow):
         quantidade = self.tabela.item(selected, 0).text()  
         descricao = self.tabela.item(selected, 1).text()  
         destino = self.tabela.item(selected, 2).text()  
-        valor_unitario = self.tabela.item(selected, 3).text().replace("R$ ", "").replace(".", "").replace(",", ".")  
+        valor_unitario = item.valor_unitario
 
         from cadastro_item import CadastroItemDialog
         dialog = CadastroItemDialog(self, editar=True, dados={

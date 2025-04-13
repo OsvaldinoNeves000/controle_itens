@@ -1,3 +1,4 @@
+import locale
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout, QMessageBox
 )
@@ -32,24 +33,12 @@ class CadastroItemDialog(QDialog):
         if editar and dados:
             self.destino_input.setText(dados['destino'])
 
-        self.valor_unitario_input: QLineEdit = QLineEdit()
-        # Allow numbers with up to 2 decimal places
-        self.valor_unitario_input.setValidator(QRegularExpressionValidator(r"^\d+(\,\d{2})?$"))
+        self.valor_unitario_input = QLineEdit()
         if editar and dados:
-            valor_texto = dados['valor_unitario']
-            valor_sanitizado = (
-                valor_texto.replace("R$ ", "")
-                .replace(".", "")
-                .replace(",", ".")
-                .strip()
-            )
-            try:
-                valor = float(valor_sanitizado)
-            except ValueError:
-                valor = 0.0
-            self.valor_unitario_input.setText(f"{valor:,.2f}")
+            self.valor_unitario_input.setText(locale.currency(dados['valor_unitario'], grouping=True))
 
         self.valor_unitario_input.textChanged.connect(self.atualizar_valor_total)
+
 
         self.valor_total_input: QLineEdit = QLineEdit()
         self.valor_total_input.setReadOnly(True)
@@ -83,15 +72,14 @@ class CadastroItemDialog(QDialog):
 
     def atualizar_valor_total(self) -> None:
         try:
-            qtd: int = int(self.quantidade_input.text()) if self.quantidade_input.text() else 0
-            valor_texto: str = self.valor_unitario_input.text().replace('R$', '').replace('.', '').replace(',', '.').strip()
-            vu: float = float(valor_texto) if valor_texto else 0.0
-            total: float = qtd * vu
-            self.valor_total_input.setText(f"R$ {total:,.2f}".replace('.', 'X').replace(',', '.').replace('X', ','))
+            quantidade = int(self.quantidade_input.text()) if self.quantidade_input.text() else 0
+            valor_unitario = locale.atof(self.valor_unitario_input.text()) if self.valor_unitario_input.text() else 0.0
+            valor_total = quantidade * valor_unitario
+            self.valor_total_input.setText(locale.currency(valor_total, grouping=True))
         except ValueError:
             self.valor_total_input.clear()
     def salvar(self) -> None:
-        editar = self.editar
+       
         try:
             quantidade: int = int(self.quantidade_input.text())
             descricao: str = self.descricao_input.text().strip()
@@ -117,3 +105,4 @@ class CadastroItemDialog(QDialog):
             QMessageBox.warning(
                 self, "Erro", f"Erro ao salvar item: {e}"
             )  # Show error message
+
