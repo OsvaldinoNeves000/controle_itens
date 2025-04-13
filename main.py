@@ -210,7 +210,8 @@ class MainWindow(QMainWindow):
     def abrir_edicao(self):
         selected = self.tabela.currentRow()
         if selected < 0:
-            return  # Nenhuma linha selecionada
+            QMessageBox.warning(self, "Aviso", "Selecione um item para editar.")
+            return
 
         id_item = self.tabela.item(selected, 0).data(Qt.UserRole)  
 
