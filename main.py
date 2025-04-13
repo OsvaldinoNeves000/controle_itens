@@ -170,7 +170,10 @@ class MainWindow(QMainWindow):
         itens = get_items()
         self.tabela.setRowCount(len(itens))
         for row, item in enumerate(itens):
-            self.tabela.setItem(row, 0, QTableWidgetItem(str(item.quantidade)))  # Qtd
+            item_widget = QTableWidgetItem(str(item.quantidade))
+            item_widget.setData(Qt.UserRole, item.id)
+            self.tabela.setItem(row, 0, item_widget)  # Qtd
+
             self.tabela.setItem(row, 1, QTableWidgetItem(item.descricao))
             self.tabela.setItem(row, 2, QTableWidgetItem(item.destino))
 
