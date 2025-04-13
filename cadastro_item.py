@@ -79,8 +79,8 @@ class CadastroItemDialog(QDialog):
         except ValueError:
             self.valor_total_input.clear()
     def salvar(self) -> None:
-       
         try:
+            editar = self.editar
             quantidade: int = int(self.quantidade_input.text())
             descricao: str = self.descricao_input.text().strip()
             destino: str = self.destino_input.text().strip()
