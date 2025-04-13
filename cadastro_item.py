@@ -123,4 +123,4 @@ class CadastroItemDialog(QDialog):
                 insert_item(item)
 
             QMessageBox.information(self, "Sucesso", "Item cadastrado com sucesso!")
-            self.accept()  # Close the dialog on success
+            self.accept()

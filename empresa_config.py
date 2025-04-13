@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QFileDialog, QMessageBox, QWidget
 )
 
-from database import get_company_config, update_company_config, Company
+from database import get_company_config, update_company_config
 
 class EmpresaConfigDialog(QDialog):
     def __init__(self, parent=None):
