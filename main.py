@@ -218,7 +218,7 @@ class MainWindow(QMainWindow):
         quantidade = self.tabela.item(selected, 0).text()  
         descricao = self.tabela.item(selected, 1).text()  
         destino = self.tabela.item(selected, 2).text()  
-        valor_unitario = self.tabela.item(selected, 3).text().replace("R$ ", "").replace(".", "X").replace(",", ".").replace("X", "")  
+        valor_unitario = self.tabela.item(selected, 3).text().replace("R$ ", "").replace(".", "").replace(",", ".")  
 
         from cadastro_item import CadastroItemDialog
         dialog = CadastroItemDialog(self, editar=True, dados={
