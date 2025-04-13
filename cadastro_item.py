@@ -82,8 +82,8 @@ class CadastroItemDialog(QDialog):
         try:
             editar = self.editar
             quantidade: int = int(self.quantidade_input.text())
-            descricao: str = self.descricao_input.text().strip()
-            destino: str = self.destino_input.text().strip()
+                        descricao: str = self.descricao_input.text().strip()
+            destino: str = self.destino_input.text().strip()            
             valor_texto: str = self.valor_unitario_input.text().replace('.', '').replace(',', '.').strip()
             valor_unitario: float = float(valor_texto)
             valor_total: float = quantidade * valor_unitario
