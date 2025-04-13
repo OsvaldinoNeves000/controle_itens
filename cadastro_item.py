@@ -47,7 +47,7 @@ class CadastroItemDialog(QDialog):
                 valor = float(valor_sanitizado)
             except ValueError:
                 valor = 0.0
-            self.valor_unitario_input.setText(f"{valor:,.2f}")
+            self.valor_unitario_input.setText(f"{valor:.,2f}")
 
         self.valor_unitario_input.textChanged.connect(self.atualizar_valor_total)
 
