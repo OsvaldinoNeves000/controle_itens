@@ -35,7 +35,8 @@ class CadastroItemDialog(QDialog):
 
         self.valor_unitario_input = QLineEdit()
         self.valor_unitario_input.setValidator(QRegularExpressionValidator(r"^\d{1,3}(\.\d{3})*(,\d{2})?$"))
-        if editar and dados:    self.valor_unitario_input.setText(locale.currency(dados['valor_unitario'], grouping=True))
+        if editar and dados:
+            self.valor_unitario_input.setText(locale.currency(dados['valor_unitario'], grouping=True))
 
         self.valor_unitario_input.textChanged.connect(self.atualizar_valor_total)
 
