@@ -1,19 +1,18 @@
 import os
-import sqlite3
 import sys
+import sqlite3
 from datetime import datetime
 
-from PySide6.QtCore import QSize
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton,
-    QTableWidget, QTableWidgetItem, QHBoxLayout, QCheckBox
+    QTableWidget, QTableWidgetItem, QHBoxLayout, QCheckBox, QFrame, QHeaderView, QMessageBox
 )
-from PySide6.QtWidgets import QFrame
-from PySide6.QtWidgets import QHeaderView
 
-DB_FILE = "dados.sqlite"
+from database import init_db, get_company_config, get_items
+from models import Company, Item
+
 
 # Conecta ou cria banco e tabelas
 conn = sqlite3.connect(DB_FILE)
@@ -43,7 +42,7 @@ conn.commit()
 
 
 class MainWindow(QMainWindow):
-    def apply_styles(self):
+    def apply_styles(self) -> None:
         self.setStyleSheet("""
             QLabel {
                 font-size: 14px;
@@ -70,7 +69,7 @@ class MainWindow(QMainWindow):
             }
         """)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("Sistema de Controle de Itens")
         self.setMinimumSize(900, 600)
@@ -78,23 +77,23 @@ class MainWindow(QMainWindow):
         self.apply_styles()
 
         self.widget = QWidget()
-        self.layout = QVBoxLayout()
+        self.layout: QVBoxLayout = QVBoxLayout()
 
-        self.logo = QLabel()
+        self.logo: QLabel = QLabel()
         self.logo.setFixedHeight(72)
 
-        self.nome_empresa = QLabel("Nome da Empresa")
-        self.endereco = QLabel("Endereço")
-        self.dados_empresa = QLabel("CNPJ: - Tel: ")
+        self.nome_empresa: QLabel = QLabel("Nome da Empresa")
+        self.endereco: QLabel = QLabel("Endereço")
+        self.dados_empresa: QLabel = QLabel("CNPJ: - Tel: ")
 
-        cabecalho_layout = QHBoxLayout()
-        self.config_btn = QPushButton()
-        self.config_btn.setIcon(QIcon("icons/settings_24dp.svg"))  # ícone local
-        self.config_btn.setIconSize(QSize(24, 24))  # 👈 tamanho do ícone
+        cabecalho_layout: QHBoxLayout = QHBoxLayout()
+        self.config_btn: QPushButton = QPushButton()
+        self.config_btn.setIcon(QIcon("icons/settings_24dp.svg"))
+        self.config_btn.setIconSize(QSize(24, 24))
         self.config_btn.setFixedSize(36, 36)  # tamanho do botão
         self.config_btn.clicked.connect(self.abrir_configuracao)
 
-        info_empresa = QVBoxLayout()
+        info_empresa: QVBoxLayout = QVBoxLayout()
         info_empresa.addWidget(self.nome_empresa)
         info_empresa.addWidget(self.endereco)
         info_empresa.addWidget(self.dados_empresa)
@@ -104,13 +103,13 @@ class MainWindow(QMainWindow):
         cabecalho_layout.addStretch()
         cabecalho_layout.addWidget(self.config_btn)
 
-        self.layout.addLayout(cabecalho_layout)
+        self.layout.addLayout(cabecalho_layout)  # Use self.layout
 
-        separador = QFrame()
+        separador: QFrame = QFrame()
         separador.setFrameShape(QFrame.HLine)
         separador.setFrameShadow(QFrame.Sunken)
         self.layout.addWidget(separador)
-
+      
         self.layout.addSpacing(20)
 
         botoes_layout = QHBoxLayout()
@@ -124,7 +123,7 @@ class MainWindow(QMainWindow):
 
             botoes_layout.addWidget(btn)
 
-        self.layout.addLayout(botoes_layout)
+        self.layout.addLayout(botoes_layout)  # Use self.layout
 
         self.tabela = QTableWidget()
         self.tabela.setSelectionBehavior(QTableWidget.SelectRows)
@@ -144,62 +143,50 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(self.tabela)
         self.widget.setLayout(self.layout)
         self.setCentralWidget(self.widget)
-        self.carregar_dados_empresa()
-        self.carregar_itens()
 
-    def carregar_dados_empresa(self):
-        cursor.execute("SELECT * FROM configuracao_empresa ORDER BY id DESC LIMIT 1")
-        empresa = cursor.fetchone()
+        try:
+            init_db()
+            self.carregar_dados_empresa()
+            self.carregar_itens()
+        except sqlite3.Error as e:
+            QMessageBox.critical(self, "Erro", f"Erro de banco de dados: {e}. O aplicativo não pode iniciar.")
+
+    def carregar_dados_empresa(self) -> None:
+        empresa: Optional[Company] = get_company_config()
         if empresa:
-            _, nome, endereco, cnpj, telefone = empresa
-            self.nome_empresa.setText(nome)
-            self.endereco.setText(endereco)
-            self.dados_empresa.setText(f"CNPJ: {cnpj} - Tel: {telefone}")
+            self.nome_empresa.setText(empresa.nome_empresa)
+            self.endereco.setText(empresa.endereco)
+            self.dados_empresa.setText(f"CNPJ: {empresa.cnpj} - Tel: {empresa.telefone}")
+
             if os.path.exists("logo.png"):
                 pixmap = QPixmap("logo.png").scaledToHeight(72)
                 self.logo.setPixmap(pixmap)
-
+    
     def carregar_itens(self):
-        cursor.execute(
-            "SELECT id, quantidade, descricao, destino, valor_unitario, valor_total, criado_em FROM itens WHERE pago = 0 ORDER BY criado_em DESC"
-        )
-        itens = cursor.fetchall()
+        itens = get_items()
         self.tabela.setRowCount(len(itens))
         for row, item in enumerate(itens):
-            for col, valor in enumerate(item[1:]):  # pula o id (item[0])
-                if col == 5:
-                    try:
-                        data = datetime.strptime(valor, "%Y-%m-%d %H:%M:%S")
-                        texto = data.strftime("%d/%m/%Y")
-                    except:
-                        texto = str(valor)
-                    cell = QTableWidgetItem(texto)
-                    cell.setTextAlignment(Qt.AlignCenter)
-                else:
-                    if col in [3, 4]:  # Valor Unitário e Total
-                        try:
-                            numero = float(valor)
-                            texto = f"R$ {numero:,.2f}".replace('.', 'X').replace(',', '.').replace('X', ',')
-                        except ValueError:
-                            texto = str(valor)
-                        cell = QTableWidgetItem(texto)
-                        cell.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
-                    else:
-                        cell = QTableWidgetItem(str(valor))
-                        if col == 0:  # Quantidade
-                            cell.setData(Qt.UserRole, item[0])  # salva id do item
-                            cell.setTextAlignment(Qt.AlignCenter)
-                self.tabela.setItem(row, col, cell)
-            # Checkbox centralizado na última coluna
-            checkbox = QCheckBox()
-            checkbox_widget = QWidget()
-            layout = QHBoxLayout(checkbox_widget)
-            layout.addWidget(checkbox)
-            layout.setAlignment(Qt.AlignCenter)
-            layout.setContentsMargins(0, 0, 0, 0)
-            checkbox_widget.setLayout(layout)
-            self.tabela.setWordWrap(False)
-            self.tabela.verticalHeader().setDefaultSectionSize(30)
+            self.tabela.setItem(row, 0, QTableWidgetItem(str(item.quantidade)))  # Qtd
+            self.tabela.setItem(row, 1, QTableWidgetItem(item.descricao))
+            self.tabela.setItem(row, 2, QTableWidgetItem(item.destino))
+
+            # Format numeric values with currency and decimal separators
+            valor_unitario_formatted = f"R$ {item.valor_unitario:,.2f}".replace('.', 'X').replace(',', '.').replace('X', ',')
+            valor_total_formatted = f"R$ {item.valor_total:,.2f}".replace('.', 'X').replace(',', '.').replace('X', ',')
+
+            self.tabela.setItem(row, 3, QTableWidgetItem(valor_unitario_formatted))
+            self.tabela.setItem(row, 4, QTableWidgetItem(valor_total_formatted))
+
+            # Format the date, handling potential None values
+            created_at = datetime.strptime(item.criado_em, "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y") if item.criado_em else ""
+            self.tabela.setItem(row, 5, QTableWidgetItem(created_at))           
+
+
+
+
+
+
+
 
     def abrir_configuracao(self):
         from empresa_config import EmpresaConfigDialog
@@ -218,12 +205,12 @@ class MainWindow(QMainWindow):
         if selected < 0:
             return  # Nenhuma linha selecionada
 
-        id_item = self.tabela.item(selected, 0).data(Qt.UserRole)
+        id_item = self.tabela.item(selected, 0).data(Qt.UserRole)  
 
-        quantidade = self.tabela.item(selected, 0).text()
-        descricao = self.tabela.item(selected, 1).text()
-        destino = self.tabela.item(selected, 2).text()
-        valor_unitario = self.tabela.item(selected, 3).text().replace("R$ ", "").replace(".", "").replace(",", ".")
+        quantidade = self.tabela.item(selected, 0).text()  
+        descricao = self.tabela.item(selected, 1).text()  
+        destino = self.tabela.item(selected, 2).text()  
+        valor_unitario = self.tabela.item(selected, 3).text().replace("R$ ", "").replace(".", "").replace(",", ".")  
 
         from cadastro_item import CadastroItemDialog
         dialog = CadastroItemDialog(self, editar=True, dados={

@@ -1,30 +1,31 @@
 import os
 import shutil
-import sqlite3
-
-from PySide6.QtCore import Qt
+from models import Company
+from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QFileDialog, QMessageBox
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QFileDialog, QMessageBox, QWidget
 )
 
-DB_FILE = "dados.sqlite"
+from database import get_company_config, update_company_config, Company
 
 class EmpresaConfigDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Configuração da Empresa")
+        self.setWindowTitle(\"Configuração da Empresa\")
         self.setMinimumWidth(400)
 
-        self.layout = QVBoxLayout()
+        self.layout: QVBoxLayout = QVBoxLayout()
 
         # Layout horizontal para logo + botão lado a lado
-        logo_layout = QHBoxLayout()
-        self.logo_label = QLabel("Nenhuma logo carregada")
-        self.logo_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        logo_layout: QHBoxLayout = QHBoxLayout()
+        self.logo_label: QLabel = QLabel(\"Nenhuma logo carregada\")
+        self.logo_label.setAlignment(Qt.AlignCenter)
         self.logo_label.setFixedHeight(128)
+        self.logo_label.setFixedWidth(128)
 
-        self.btn_logo = QPushButton("Selecionar Logo")
+        self.btn_logo: QPushButton = QPushButton(\"Selecionar Logo\")
+
         self.btn_logo.clicked.connect(self.selecionar_logo)
 
         logo_layout.addWidget(self.logo_label)
@@ -55,32 +56,98 @@ class EmpresaConfigDialog(QDialog):
 
         self.setLayout(self.layout)
 
-        self.logo_path = None
-        self.carregar_existente()
+        self.logo_path: Optional[str] = None
+        self.carregar_dados_existentes()
 
-    def carregar_existente(self):
-        conn = sqlite3.connect(DB_FILE)
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM configuracao_empresa ORDER BY id DESC LIMIT 1")
-        empresa = cur.fetchone()
-        conn.close()
+    def carregar_dados_existentes(self) -> None:
+        try:
+            empresa: Optional[Company] = get_company_config()
+            if empresa:
+                self.nome_input.setText(empresa.nome_empresa)
+                self.endereco_input.setText(empresa.endereco)
+                self.cnpj_input.setText(empresa.cnpj)
+                self.telefone_input.setText(empresa.telefone)
+                if os.path.exists("logo.png"):
+                    pixmap = QPixmap("logo.png").scaledToHeight(128, Qt.SmoothTransformation)
+                    self.logo_label.setPixmap(pixmap)
+                    self.logo_label.setFixedSize(QSize(128, 128))
+        except Exception as e:
+            QMessageBox.warning(self, "Erro", f"Erro ao carregar dados da empresa: {e}")
 
-        if empresa:
-            _, nome, endereco, cnpj, telefone = empresa
-            self.nome_input.setText(nome)
-            self.endereco_input.setText(endereco)
-            self.cnpj_input.setText(cnpj)
-            self.telefone_input.setText(telefone)
-            if os.path.exists("logo.png"):
-                self.logo_label.setPixmap(QPixmap("logo.png").scaledToHeight(128, Qt.SmoothTransformation))
+    def selecionar_logo(self) -> None:
+        # Abre o diálogo para selecionar a imagem
+        # _ é usado para descartar o segundo valor retornado, que indica o filtro selecionado
+        # '': diretório inicial do diálogo (vazio para o diretório atual ou padrão)
+        # \"Imagens...\" :  string que define os tipos de arquivos que podem ser selecionados.
+        #       Neste caso, arquivos com extensões .png, .jpg, .jpeg e .bmp são permitidos.
+        #       O uso de parênteses e asteriscos segue a sintaxe específica do Qt para filtros de arquivos.
+        #       O nome que precede a lista de extensões (Imagens) é exibido para o usuário no diálogo.
+        # getOpenFileName retorna uma tupla contendo o caminho do arquivo selecionado e o filtro usado
+        #   (que descartamos com o uso de _).
+        # Ex: ('/home/user/Documents/my_image.png', 'Images (*.png *.xpm *.jpg)')
+        #       seria o retorno se o usuário selecionar 'my_image.png'.
 
-    def selecionar_logo(self):
-        caminho, _ = QFileDialog.getOpenFileName(self, "Selecionar Logo", "", "Imagens (*.png *.jpg *.jpeg *.bmp)")
+
+        # Abre o diálogo para selecionar a imagem.
+        # O segundo valor retornado (o filtro selecionado) é descartado usando _
+        # '': diretório inicial (diretório atual ou padrão)
+        # \"Imagens...\": string que define os tipos de arquivos que podem ser selecionados
+        # getOpenFileName retorna uma tupla: (caminho do arquivo, filtro selecionado)
+        # Ex: ('/home/user/Documents/my_image.png', 'Images (*.png *.xpm *.jpg)')
+        # se o usuário selecionar 'my_image.png'.
+
+
+        # Abre o diálogo para selecionar a imagem
+        # _ é usado para descartar o segundo valor retornado, que indica o filtro selecionado
+        # '': diretório inicial do diálogo (vazio para o diretório atual ou padrão)
+        # \"Imagens...\" :  string que define os tipos de arquivos que podem ser selecionados.
+        #       Neste caso, arquivos com extensões .png, .jpg, .jpeg e .bmp são permitidos.
+        #       O uso de parênteses e asteriscos segue a sintaxe específica do Qt para filtros de arquivos.
+        #       O nome que precede a lista de extensões (Imagens) é exibido para o usuário no diálogo.
+        # getOpenFileName retorna uma tupla contendo o caminho do arquivo selecionado e o filtro usado
+        #   (que descartamos com o uso de _).
+        # Ex: ('/home/user/Documents/my_image.png', 'Images (*.png *.xpm *.jpg)')
+        #       seria o retorno se o usuário selecionar 'my_image.png'.
+
+
+        # Abre o diálogo para selecionar a imagem.
+        # O segundo valor retornado (o filtro selecionado) é descartado usando _
+        # '': diretório inicial (diretório atual ou padrão)
+        # \"Imagens...\": string que define os tipos de arquivos que podem ser selecionados
+        # getOpenFileName retorna uma tupla: (caminho do arquivo, filtro selecionado)
+        # Ex: ('/home/user/Documents/my_image.png', 'Images (*.png *.xpm *.jpg)')
+        # se o usuário selecionar 'my_image.png'.
+
+
+        # Abre o diálogo para selecionar a imagem
+        # _ é usado para descartar o segundo valor retornado, que indica o filtro selecionado
+        # '': diretório inicial do diálogo (vazio para o diretório atual ou padrão)
+        # \"Imagens...\" :  string que define os tipos de arquivos que podem ser selecionados.
+        #       Neste caso, arquivos com extensões .png, .jpg, .jpeg e .bmp são permitidos.
+        #       O uso de parênteses e asteriscos segue a sintaxe específica do Qt para filtros de arquivos.
+        #       O nome que precede a lista de extensões (Imagens) é exibido para o usuário no diálogo.
+        # getOpenFileName retorna uma tupla contendo o caminho do arquivo selecionado e o filtro usado
+        #   (que descartamos com o uso de _).
+        # Ex: ('/home/user/Documents/my_image.png', 'Images (*.png *.xpm *.jpg)')
+        #       seria o retorno se o usuário selecionar 'my_image.png'.
+
+
+        # Abre o diálogo para selecionar a imagem.
+        # O segundo valor retornado (o filtro selecionado) é descartado usando _
+        # '': diretório inicial (diretório atual ou padrão)
+        # \"Imagens...\": string que define os tipos de arquivos que podem ser selecionados
+        # getOpenFileName retorna uma tupla: (caminho do arquivo, filtro selecionado)
+        # Ex: ('/home/user/Documents/my_image.png', 'Images (*.png *.xpm *.jpg)')
+        # se o usuário selecionar 'my_image.png'.
+
+        caminho: str, _ = QFileDialog.getOpenFileName(self, "Selecionar Logo", "", "Imagens (*.png *.jpg *.jpeg *.bmp)")
         if caminho:
             self.logo_path = caminho
-            self.logo_label.setPixmap(QPixmap(caminho).scaledToHeight(64, Qt.SmoothTransformation))
+            pixmap: QPixmap = QPixmap(caminho).scaled(128, 128, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.logo_label.setPixmap(pixmap)
+            self.logo_label.setFixedSize(QSize(128, 128))
 
-    def salvar_dados(self):
+    def salvar_dados(self) -> None:
         nome = self.nome_input.text().strip()
         telefone = self.telefone_input.text().strip()
         cnpj = self.cnpj_input.text().strip()
@@ -90,15 +157,13 @@ class EmpresaConfigDialog(QDialog):
             QMessageBox.warning(self, "Erro", "Preencha todos os campos.")
             return
 
-        conn = sqlite3.connect(DB_FILE)
-        cur = conn.cursor()
-        cur.execute("INSERT INTO configuracao_empresa (nome_empresa, endereco, cnpj, telefone) VALUES (?, ?, ?, ?)",
-                    (nome, endereco, cnpj, telefone))
-        conn.commit()
-        conn.close()
+        try:
+            empresa: Company = Company(nome_empresa=nome, endereco=endereco, cnpj=cnpj, telefone=telefone)
+            update_company_config(empresa)
+            if self.logo_path:
+                shutil.copyfile(self.logo_path, "logo.png")
+            QMessageBox.information(self, "Sucesso", "Dados salvos com sucesso!")
+            self.accept()
+        except sqlite3.Error as e:
+            QMessageBox.warning(self, "Erro", f"Erro ao salvar dados da empresa: {e}")
 
-        if self.logo_path:
-            shutil.copyfile(self.logo_path, "logo.png")
-
-        QMessageBox.information(self, "Sucesso", "Dados salvos com sucesso!")
-        self.accept()
