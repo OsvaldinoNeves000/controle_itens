@@ -1,6 +1,7 @@
 import os
 import sys
 import sqlite3
+import sqlite3
 from datetime import datetime
 
 from PySide6.QtCore import QSize, Qt
@@ -12,6 +13,9 @@ from PySide6.QtWidgets import (
 
 from database import init_db, get_company_config, get_items
 from models import Company, Item
+
+DB_FILE = "items.db"
+
 
 
 # Conecta ou cria banco e tabelas
