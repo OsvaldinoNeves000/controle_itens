@@ -38,7 +38,7 @@ class CadastroItemDialog(QDialog):
         if editar and dados:
             valor_texto = dados['valor_unitario']
             valor_sanitizado = (
-                valor_texto.replace("R$", "")
+                valor_texto.replace("R$ ", "")
                 .replace(".", "")
                 .replace(",", ".")
                 .strip()
@@ -49,8 +49,6 @@ class CadastroItemDialog(QDialog):
                 valor = 0.0
             self.valor_unitario_input.setText(f"{valor:,.2f}")
 
-        # Limit to 10 million (including cents)
-        self.valor_unitario_input.textChanged.connect(self.formatar_valor_unitario)
         self.valor_unitario_input.textChanged.connect(self.atualizar_valor_total)
 
         self.valor_total_input: QLineEdit = QLineEdit()
@@ -92,15 +90,6 @@ class CadastroItemDialog(QDialog):
             self.valor_total_input.setText(f"R$ {total:,.2f}".replace('.', 'X').replace(',', '.').replace('X', ','))
         except ValueError:
             self.valor_total_input.clear()
-
-    def formatar_valor_unitario(self) -> None:
-        texto: str = self.valor_unitario_input.text().replace('R$', '').replace('.', '').replace(',', '').strip()
-        if texto.isdigit():
-            valor: float = int(texto) / 100
-            self.valor_unitario_input.blockSignals(True)
-            self.valor_unitario_input.setText(f"R$ {valor:,.2f}".replace('.', 'X').replace(',', '.').replace('X', ','))
-            self.valor_unitario_input.blockSignals(False)
-
     def salvar(self) -> None:
         editar = self.editar
         try:
