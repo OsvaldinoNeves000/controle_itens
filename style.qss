@@ -1,0 +1,46 @@
+QMainWindow {
+    background-color: #f7f7f7;
+}
+
+QLabel {
+    font-size: 14px;
+    color: #333;
+}
+
+QPushButton {
+    padding: 6px 12px;
+    background-color: #1976d2;
+    color: white;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #1565c0;
+}
+
+QLineEdit {
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+}
+
+QTableWidget {
+    border: 1px solid #ccc;
+    background-color: white;
+    alternate-background-color: #f0f0f0;
+    gridline-color: #ccc;
+    font-size: 13px;
+}
+
+QHeaderView::section {
+    background-color: #e0e0e0;
+    padding: 4px;
+    font-weight: bold;
+    border: 1px solid #ccc;
+}
+QTableWidget::item:selected {
+    background-color: #1976d2;
+    color: white;
+}
