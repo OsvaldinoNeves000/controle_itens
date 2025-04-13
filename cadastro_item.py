@@ -124,3 +124,7 @@ class CadastroItemDialog(QDialog):
 
             QMessageBox.information(self, "Sucesso", "Item cadastrado com sucesso!")
             self.accept()
+        except Exception as e:  # Catch any exception during database interaction
+            QMessageBox.warning(
+                self, "Erro", f"Erro ao salvar item: {e}"
+            )  # Show error message
